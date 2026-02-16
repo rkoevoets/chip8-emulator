@@ -74,7 +74,11 @@ void cpu_loop() {
     // Execute
 }
 
-
+/**
+ * @brief Main render loop of the emulator. Handles the rendering of the CHIP8
+ * pixels to the screen.
+ *
+ */
 void render() {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer);
