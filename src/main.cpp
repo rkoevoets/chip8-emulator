@@ -9,15 +9,8 @@
 
 #include "SDL2/SDL.h"
 
-
-// Memory
-uint8_t memory[4096] = { 0x0 };
-
-// Registers
-uint16_t index_register = 0x0;
-uint8_t registers[16] = { 0x0 };
-uint16_t program_counter = 0x0;
-uint8_t stack_pointer = 0x0;
+#include "cpu.h"
+#include "memory.h"
 
 // Timers
 uint8_t delay_timer = 0x0;
@@ -29,6 +22,10 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 
 
+/**
+ * @brief Initialize SDL objects.
+ *
+ */
 void init_SDL() {
     SDL_Init(SDL_INIT_EVERYTHING);
 
@@ -47,7 +44,10 @@ void init_SDL() {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 }
 
-
+/**
+ * @brief Deallocate and close all SDL objects. Then quit SDL.
+ *
+ */
 void close_SDL() {
     // Deallocate the SDL objects
     SDL_DestroyRenderer(renderer);
@@ -68,32 +68,22 @@ void close_SDL() {
  */
 void read_rom(std::string filepath, uint8_t* mem_start) {
     std::ifstream file{filepath};
-    uint8_t next_byte;
 
     int i = 0;
     while (file) {
-        next_byte = file.get();
-
-        std::cout << std::format("instruction {:02X}", next_byte) << std::endl;
-
-        mem_start[i] = next_byte;
+        mem_start[i] = file.get();
 
         i++;
     }
 }
 
+/**
+ * @brief Write all pixel values of the CHIP8 graphics to the screen.
+ *
+ */
 void write_CHIP8_buffer() {
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
     SDL_RenderDrawPoint(renderer, 32, 16);
-}
-
-
-void cpu_loop() {
-    // Fetch
-    uint16_t instruction = (memory[program_counter] << 8) | memory[program_counter + 1];
-
-    // Decode
-    // Execute
 }
 
 /**
@@ -112,7 +102,6 @@ void render() {
     SDL_RenderSetLogicalSize(renderer, 640, 320);
     SDL_RenderPresent(renderer);
 }
-
 
 int main() {
     init_SDL();
