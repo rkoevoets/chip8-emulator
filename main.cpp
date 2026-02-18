@@ -1,6 +1,9 @@
 #include <iostream>
 #include <ostream>
+#include <format>
 #include <istream>
+#include <fstream>
+#include <string>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -57,6 +60,27 @@ void close_SDL() {
     SDL_Quit();
 }
 
+/**
+ * @brief Read a ROM into a memory array starting at mem_start.
+ *
+ * @param filepath file path to the ROM
+ * @param mem_start starting address of the memory array
+ */
+void read_rom(std::string filepath, uint8_t* mem_start) {
+    std::ifstream file{filepath};
+    uint8_t next_byte;
+
+    int i = 0;
+    while (file) {
+        next_byte = file.get();
+
+        std::cout << std::format("instruction {:02X}", next_byte) << std::endl;
+
+        mem_start[i] = next_byte;
+
+        i++;
+    }
+}
 
 void write_CHIP8_buffer() {
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
@@ -67,8 +91,6 @@ void write_CHIP8_buffer() {
 void cpu_loop() {
     // Fetch
     uint16_t instruction = (memory[program_counter] << 8) | memory[program_counter + 1];
-
-    std::cout << instruction << std::endl;
 
     // Decode
     // Execute
@@ -94,6 +116,9 @@ void render() {
 
 int main() {
     init_SDL();
+
+    // Read the provided rom into memory
+    read_rom("roms/test_opcode.ch8", memory);
 
     bool quit = false;
     SDL_Event e;
