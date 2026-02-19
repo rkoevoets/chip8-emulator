@@ -82,7 +82,7 @@ void read_rom(std::string filepath, uint8_t* mem_start) {
  *
  */
 void write_CHIP8_buffer() {
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
     for (int i = 0; i < 32; i++) {
         for (int j = 0; j < 64; j++) {
