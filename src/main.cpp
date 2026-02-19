@@ -83,7 +83,13 @@ void read_rom(std::string filepath, uint8_t* mem_start) {
  */
 void write_CHIP8_buffer() {
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    SDL_RenderDrawPoint(renderer, 32, 16);
+
+    for (int i = 0; i < 32; i++) {
+        for (int j = 0; j < 64; j++) {
+            if (pixel_buffer[i][j])
+                SDL_RenderDrawPoint(renderer, j, i);
+        }
+    }
 }
 
 /**
@@ -107,7 +113,7 @@ int main() {
     init_SDL();
 
     // Read the provided rom into memory
-    read_rom("roms/test_opcode.ch8", memory);
+    read_rom("roms/test_opcode.ch8", memory + 0x200);
 
     bool quit = false;
     SDL_Event e;
