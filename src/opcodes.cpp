@@ -182,16 +182,19 @@ void opcode_draw(Instruction instr) {
     registers[0xF] = 0x0;
 
     // Write the sprite to the pixel buffer, it is always 8 bits/pixels wide.
+    uint8_t sprite_mask;
     for (int row = 0; row < height; row++) {
         uint8_t pixel_row = memory[sprite_addr + row];
 
         for (int i = 0; i < 8; i++) {
+            sprite_mask = (pixel_row & (1 << (7 - i))) >> (7 - i);
+
             // Set flag to true if an activated pixel was flipped.
-            if (pixel_buffer[y_start + row][x_start + i] & (pixel_row & (0b1 << i)) >> i) {
+            if (pixel_buffer[y_start + row][x_start + i] & sprite_mask) {
                 registers[0xF] = 1;
             }
 
-            pixel_buffer[y_start + row][x_start + i] ^= (pixel_row & (0b1 << i)) >> i;
+            pixel_buffer[y_start + row][x_start + i] ^= sprite_mask;
         }
     }
 }
