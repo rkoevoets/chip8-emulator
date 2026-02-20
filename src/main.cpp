@@ -11,6 +11,7 @@
 
 #include "cpu.h"
 #include "memory.h"
+#include "logger.h"
 
 // SDL objects
 SDL_Window* window;
@@ -127,11 +128,22 @@ void load_fonts() {
     std::copy(FONT_DATA, FONT_DATA + (5 * 16), memory + 0x050);
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    std::string rom_path;
+
+    if (argc != 2) {
+        log_err("No ROM provided, please provide a ROM path...");
+
+        return 1;
+    } else {
+        rom_path = argv[1];
+    }
+
+    // Initialize SDL
     init_SDL();
 
     // Read the provided rom into memory
-    read_rom("roms/IBM Logo.ch8", memory + 0x200);
+    read_rom(rom_path, memory + 0x200);
     load_fonts();
 
     bool quit = false;
