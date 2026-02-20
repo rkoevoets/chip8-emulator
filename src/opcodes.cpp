@@ -125,7 +125,14 @@ void opcode_xor(Instruction instr) {
 void opcode_add_y_to_x(Instruction instr) {
     log_info(std::format("ADD REG({:02X}) REG({:02X})", instr.x, instr.y));
 
+    // Test for overflow first by using a larger datatype.
+    int temp = registers[instr.x] + registers[instr.y];
+    bool overflowed = temp > 0xFF;
+
     registers[instr.x] += registers[instr.y];
+
+    // Set flag register
+    registers[0xF] = overflowed;
 }
 
 void opcode_sub_y_from_x(Instruction instr) {
@@ -143,13 +150,23 @@ void opcode_sub_x_from_y(Instruction instr) {
 void opcode_shift_right(Instruction instr) {
     log_info(std::format("RSHIFT REG({:02X})", instr.y));
 
+    bool bit_out = (registers[instr.y] & 0b1) == 0b1;
+
     registers[instr.x] = registers[instr.y] > 1;
+
+    // Set flag register
+    registers[0xF] = bit_out;
 }
 
 void opcode_shift_left(Instruction instr) {
     log_info(std::format("LSHIFT REG({:02X})", instr.y));
 
+    bool bit_out = (registers[instr.y] & 0b10000000) == 0b1000000;
+
     registers[instr.x] = registers[instr.y] < 1;
+
+    // Set flag register
+    registers[0xF] = bit_out;
 }
 
 void opcode_set_index(Instruction instr) {
