@@ -22,8 +22,8 @@ enum Opcode {
     OP_XOR,
     OP_ADD_Y_TO_X,
     OP_SUB_Y_X,
-    OP_SHIFT_RIGHT,
     OP_SUB_X_Y,
+    OP_SHIFT_RIGHT,
     OP_SHIFT_LEFT,
     OP_SET_INDEX,
     OP_JUMP_OFFSET,
@@ -67,5 +67,16 @@ extern uint8_t registers[16];
 extern uint16_t program_counter;
 extern uint8_t stack_pointer;
 
+// Timers
+extern uint8_t delay_timer;
+extern uint8_t sound_timer;
+
+// Stack
+extern uint16_t stack[16];
+
 // CPU methods
+void push_stack(uint16_t val);
+uint16_t pop_stack();
+
+
 void cpu_loop();

@@ -12,11 +12,6 @@
 #include "cpu.h"
 #include "memory.h"
 
-// Timers
-uint8_t delay_timer = 0x0;
-uint8_t sound_timer = 0x0;
-
-
 // SDL objects
 SDL_Window* window;
 SDL_Renderer* renderer;

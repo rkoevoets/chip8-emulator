@@ -17,7 +17,27 @@ uint8_t memory[4096] = { 0x0 };
 uint16_t index_register = 0x0;
 uint8_t registers[16] = { 0x0 };
 uint16_t program_counter = 0x0;
+
+// Timers
+uint8_t delay_timer = 0x0;
+uint8_t sound_timer = 0x0;
+
+// Stack
 uint8_t stack_pointer = 0x0;
+uint16_t stack[16] = {0x0};
+
+
+void push_stack(uint16_t val) {
+    stack[stack_pointer] = val;
+
+    stack_pointer++;
+}
+
+uint16_t pop_stack() {
+    stack_pointer--;
+
+    return stack[stack_pointer];
+}
 
 /**
  * @brief Fetch the next instruction specified by the program counter, then
@@ -186,11 +206,35 @@ Instruction decode(uint16_t instr_bytes) {
 void execute(Instruction instr) {
     switch (instr.op_id)
     {
+    case OP_EXEC_ROUTINE:
+        opcode_execute_routine(instr);
+        break;
     case OP_CLEAR_SCREEN:
         opcode_clear_screen(instr);
         break;
+    case OP_JUMP_SUBR:
+        opcode_jump_subr(instr);
+        break;
     case OP_JUMP_ADDR:
         opcode_jump_address(instr);
+        break;
+    case OP_RETURN:
+        opcode_return(instr);
+        break;
+    case OP_CALL_SUBR:
+        opcode_call_subr(instr);
+        break;
+    case OP_SKIP_VAL_EQ:
+        opcode_skip_val_eq(instr);
+        break;
+    case OP_SKIP_VAL_NEQ:
+        opcode_skip_val_neq(instr);
+        break;
+    case OP_SKIP_REG_EQ:
+        opcode_skip_reg_eq(instr);
+        break;
+    case OP_SKIP_REQ_NEQ:
+        opcode_skip_reg_neq(instr);
         break;
     case OP_SET_X:
         opcode_set_x(instr);
@@ -198,11 +242,77 @@ void execute(Instruction instr) {
     case OP_ADD_X:
         opcode_add_x(instr);
         break;
-    case OP_SET_INDEX:
-        opcode_set_index(instr);
+    case OP_ADD_X_TO_Y:
+        opcode_add_x_to_y(instr);
+        break;
+    case OP_SET_X_Y:
+        opcode_set_x_y(instr);
+        break;
+    case OP_OR:
+        opcode_or(instr);
+        break;
+    case OP_AND:
+        opcode_and(instr);
+        break;
+    case OP_XOR:
+        opcode_xor(instr);
+        break;
+    case OP_ADD_Y_TO_X:
+        opcode_add_y_to_x(instr);
+        break;
+    case OP_SUB_Y_X:
+        opcode_sub_y_from_x(instr);
+        break;
+    case OP_SUB_X_Y:
+        opcode_sub_x_from_y(instr);
+        break;
+    case OP_SHIFT_RIGHT:
+        opcode_shift_right(instr);
+        break;
+    case OP_SHIFT_LEFT:
+        opcode_shift_left(instr);
+        break;
+    case OP_JUMP_OFFSET:
+        opcode_jump_offset(instr);
+        break;
+    case OP_SET_X_RAND:
+        opcode_set_x_random(instr);
         break;
     case OP_DRAW:
         opcode_draw(instr);
+        break;
+    case OP_SKIP_KP:
+        opcode_skip_kp(instr);
+        break;
+    case OP_SKIP_NOT_KP:
+        opcode_skip_not_kp(instr);
+        break;
+    case OP_SET_X_DELAY:
+        opcode_set_x_to_delay(instr);
+        break;
+    case OP_WAIT_KP:
+        opcode_wait_keypress(instr);
+        break;
+    case OP_SET_DELAY_X:
+        opcode_set_delay_to_x(instr);
+        break;
+    case OP_SET_SOUND_X:
+        opcode_set_sound_to_x(instr);
+        break;
+    case OP_ADD_X_I:
+        opcode_add_x_to_index(instr);
+        break;
+    case OP_SET_I_SPRITE:
+        opcode_set_index_sprite(instr);
+        break;
+    case OP_WRITE_BCD:
+        opcode_write_bcd(instr);
+        break;
+    case OP_WRITE_REGS:
+        opcode_write_regs(instr);
+        break;
+    case OP_READ_REGS:
+        opcode_read_regs(instr);
         break;
     default:
         break;
