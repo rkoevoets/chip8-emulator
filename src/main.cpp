@@ -105,6 +105,10 @@ void render() {
     SDL_RenderPresent(renderer);
 }
 
+/**
+ * @brief Load font data into the CHIP8 memory.
+ *
+ */
 void load_fonts() {
     const uint8_t FONT_DATA[] = {
                 0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -128,6 +132,9 @@ void load_fonts() {
     std::copy(FONT_DATA, FONT_DATA + (5 * 16), memory + 0x050);
 }
 
+/**
+ * @brief Handle graphics setup, arguments passed and initialize the emulator.
+ */
 int main(int argc, char *argv[]) {
     std::string rom_path;
 
@@ -142,7 +149,7 @@ int main(int argc, char *argv[]) {
     // Initialize SDL
     init_SDL();
 
-    // Read the provided rom into memory
+    // Prime the memory with the provided ROM and font data.
     read_rom(rom_path, memory + 0x200);
     load_fonts();
 
@@ -155,7 +162,7 @@ int main(int argc, char *argv[]) {
         // Handle all of the rendering.
         render();
 
-        // Check for events
+        // Check for events.
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;

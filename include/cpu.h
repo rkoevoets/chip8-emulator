@@ -1,7 +1,11 @@
 #pragma once
 
 
-// Opcode enum
+/**
+ * @brief An enum to identify each instruction easily. Also provides an enum
+ * for undefined opcodes if necessary.
+ *
+ */
 enum Opcode {
     OP_EXEC_ROUTINE,
     OP_CLEAR_SCREEN,
@@ -55,6 +59,12 @@ struct Instruction {
     uint8_t y;
 };
 
+
+/**
+ * @brief A simple data type to store instructions. It stores the instruction
+ * identifier provided by an enum. It also stores all possible arguments that
+ * could be used by the instruction.
+ */
 typedef struct Instruction Instruction;
 
 

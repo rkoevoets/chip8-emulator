@@ -27,13 +27,22 @@ uint8_t sound_timer = 0x0;
 uint8_t stack_pointer = 0x0;
 uint16_t stack[16] = {0x0};
 
-
+/**
+ * @brief Push a 16bit value onto the stack, increment the stack pointer.
+ *
+ * @param val The value to push onto the stack.
+ */
 void push_stack(uint16_t val) {
     stack[stack_pointer] = val;
 
     stack_pointer++;
 }
 
+/**
+ * @brief Pop a 16bit value from the stack. Decrement the stack pointer.
+ *
+ * @return uint16_t The popped value.
+ */
 uint16_t pop_stack() {
     stack_pointer--;
 
@@ -203,7 +212,12 @@ Instruction decode(uint16_t instr_bytes) {
     return instr;
 }
 
-
+/**
+ * @brief Execute the decoded instruction with the provided arguments.
+ *
+ * @param instr The instruction context containing which instruction to execute
+ * and which arguments are used.
+ */
 void execute(Instruction instr) {
     switch (instr.op_id)
     {
@@ -323,6 +337,10 @@ void execute(Instruction instr) {
     }
 }
 
+/**
+ * @brief The main CPU loop, handles fetching, decoding and execution.
+ *
+ */
 void cpu_loop() {
     // Fetch
     uint16_t opcode = fetch();
