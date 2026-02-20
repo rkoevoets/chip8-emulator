@@ -170,7 +170,9 @@ void opcode_add_x_to_index(Instruction instr) {
 }
 
 void opcode_set_index_sprite(Instruction instr) {
+    uint8_t hex_char = registers[instr.x] & 0x0F;
 
+    index_register = 0x050 + (hex_char * 5);
 }
 
 void opcode_write_bcd(Instruction instr) {

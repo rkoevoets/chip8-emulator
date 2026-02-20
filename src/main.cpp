@@ -105,7 +105,8 @@ void render() {
 }
 
 void load_fonts() {
-    const uint8_t FONT_DATA[] = {0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+    const uint8_t FONT_DATA[] = {
+                0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
                 0x20, 0x60, 0x20, 0x20, 0x70, // 1
                 0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
                 0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
@@ -130,7 +131,7 @@ int main() {
     init_SDL();
 
     // Read the provided rom into memory
-    read_rom("roms/test_opcode.ch8", memory + 0x200);
+    read_rom("roms/IBM Logo.ch8", memory + 0x200);
     load_fonts();
 
     bool quit = false;

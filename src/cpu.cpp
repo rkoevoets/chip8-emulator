@@ -16,7 +16,7 @@ uint8_t memory[4096] = { 0x0 };
 // Registers
 uint16_t index_register = 0x0;
 uint8_t registers[16] = { 0x0 };
-uint16_t program_counter = 0x0;
+uint16_t program_counter = 0x200;
 
 // Timers
 uint8_t delay_timer = 0x0;
@@ -327,8 +327,6 @@ void cpu_loop() {
 
     // Decode
     Instruction instr = decode(instruction);
-
-    std::cout << instr.op_id << std::endl;
 
     // Execute
     execute(instr);
