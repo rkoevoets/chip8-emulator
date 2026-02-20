@@ -5,6 +5,7 @@
 #include "cpu.h"
 #include "opcodes.h"
 #include "memory.h"
+#include "logger.h"
 
 
 // Graphics
@@ -236,6 +237,9 @@ void execute(Instruction instr) {
     case OP_SKIP_REQ_NEQ:
         opcode_skip_reg_neq(instr);
         break;
+    case OP_SET_INDEX:
+        opcode_set_index(instr);
+        break;
     case OP_SET_X:
         opcode_set_x(instr);
         break;
@@ -321,12 +325,10 @@ void execute(Instruction instr) {
 
 void cpu_loop() {
     // Fetch
-    uint16_t instruction = fetch();
-
-    std::cout << std::format("instr. {:04X} ; PC={:04X}", instruction, program_counter) << std::endl;
+    uint16_t opcode = fetch();
 
     // Decode
-    Instruction instr = decode(instruction);
+    Instruction instr = decode(opcode);
 
     // Execute
     execute(instr);
