@@ -138,13 +138,23 @@ void opcode_add_y_to_x(Instruction instr) {
 void opcode_sub_y_from_x(Instruction instr) {
     log_info(std::format("SUB REG({:02X}) REG({:02X})", instr.x, instr.y));
 
-    registers[instr.x] -= registers[instr.y];
+    uint8_t flag = registers[instr.y] > registers[instr.x];
+
+    registers[instr.x] = registers[instr.x] - registers[instr.y];
+
+    // Set underflow flag
+    registers[0xF] = flag;
 }
 
 void opcode_sub_x_from_y(Instruction instr) {
-    log_info(std::format("OR REG({:02X}) REG({:02X})", instr.y, instr.x));
+    log_info(std::format("SUB REG({:02X}) REG({:02X})", instr.y, instr.x));
 
-    registers[instr.y] -= registers[instr.x];
+    uint8_t flag = registers[instr.x] > registers[instr.y];
+
+    registers[instr.x] = registers[instr.y] - registers[instr.x];
+
+    // Set underflow flag
+    registers[0xF] = flag;
 }
 
 void opcode_shift_right(Instruction instr) {
@@ -161,6 +171,7 @@ void opcode_shift_right(Instruction instr) {
 void opcode_shift_left(Instruction instr) {
     log_info(std::format("LSHIFT REG({:02X})", instr.y));
 
+    // Check the most significant bit, is it on? Then set the flag register.
     bool bit_out = (registers[instr.y] & 0b10000000) == 0b1000000;
 
     registers[instr.x] = registers[instr.y] << 1;
