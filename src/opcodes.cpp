@@ -26,7 +26,7 @@ void opcode_clear_screen(Instruction instr) {
 
 void opcode_jump_subr(Instruction instr) {
     log_info(std::format("JUMP_SUBR"));
- // Don't implement
+    // Don't implement
 }
 
 void opcode_jump_address(Instruction instr) {
@@ -170,7 +170,7 @@ void opcode_shift_left(Instruction instr) {
 }
 
 void opcode_set_index(Instruction instr) {
-    log_info(std::format("SET INDEX = 0x{:02X}", instr.y));
+    log_info(std::format("SET INDEX = 0x{:04X}", instr.nnn));
 
     index_register = instr.nnn;
 }

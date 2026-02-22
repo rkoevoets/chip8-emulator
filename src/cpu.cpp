@@ -33,6 +33,10 @@ uint16_t stack[16] = {0x0};
  * @param val The value to push onto the stack.
  */
 void push_stack(uint16_t val) {
+    if (stack_pointer > 15) {
+        throw std::runtime_error("Stack cannot be pushed if it is full (sp=15+)");
+    }
+
     stack[stack_pointer] = val;
 
     stack_pointer++;
@@ -44,6 +48,10 @@ void push_stack(uint16_t val) {
  * @return uint16_t The popped value.
  */
 uint16_t pop_stack() {
+    if (stack_pointer == 0) {
+        throw std::runtime_error("Stack cannot be popped if the stack pointer is zero.");
+    }
+
     stack_pointer--;
 
     return stack[stack_pointer];
@@ -344,6 +352,8 @@ void execute(Instruction instr) {
 void cpu_loop() {
     // Fetch
     uint16_t opcode = fetch();
+
+    log_info(std::format("PC={:04X}; OPCODE={:04X}", program_counter-2, opcode));
 
     // Decode
     Instruction instr = decode(opcode);

@@ -6,17 +6,25 @@
 #include <string>
 #include <stdint.h>
 #include <stdio.h>
-
-#include "SDL2/SDL.h"
+#include <SDL.h>
 
 #include "cpu.h"
 #include "memory.h"
 #include "logger.h"
 
+
+const int ROM_MAX_SIZE = 4096;
+
 // SDL objects
 SDL_Window* window;
 SDL_Renderer* renderer;
 
+
+void print_memory() {
+    for (int i = 0; i < 4096; i+=2) {
+        std::cout << std::format("{:04x}: {:02X}{:02X}", i, memory[i], memory[i+1]) << std::endl;
+    }
+}
 
 /**
  * @brief Initialize SDL objects.
@@ -62,15 +70,15 @@ void close_SDL() {
  * @param filepath file path to the ROM
  * @param mem_start starting address of the memory array
  */
-void read_rom(std::string filepath, uint8_t* mem_start) {
-    std::ifstream file{filepath};
+void read_rom(std::string filepath, uint16_t offset) {
+    std::ifstream file(filepath, std::ios_base::binary);
 
-    int i = 0;
-    while (file) {
-        mem_start[i] = file.get();
-
-        i++;
+    if (!file) {
+        log_err("Could not read ROM.");
+        exit(1);
     }
+
+    file.read((char*) (memory + offset), ROM_MAX_SIZE);
 }
 
 /**
@@ -138,6 +146,8 @@ void load_fonts() {
 int main(int argc, char *argv[]) {
     std::string rom_path;
 
+    open_log_file();
+
     if (argc != 2) {
         log_err("No ROM provided, please provide a ROM path...");
 
@@ -150,7 +160,7 @@ int main(int argc, char *argv[]) {
     init_SDL();
 
     // Prime the memory with the provided ROM and font data.
-    read_rom(rom_path, memory + 0x200);
+    read_rom(rom_path, 0x200);
     load_fonts();
 
     bool quit = false;
@@ -171,6 +181,7 @@ int main(int argc, char *argv[]) {
     }
 
     close_SDL();
+    close_log_file();
 
     return 0;
 }
