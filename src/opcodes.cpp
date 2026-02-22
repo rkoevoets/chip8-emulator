@@ -265,14 +265,29 @@ void opcode_set_index_sprite(Instruction instr) {
 void opcode_write_bcd(Instruction instr) {
     log_info(std::format("WRITE_BCD"));
 
+    int num = registers[instr.x];
+    uint8_t hundreths = num / 100;
+    uint8_t tenths = (num - (100 * hundreths)) / 10;
+    uint8_t ones = (num - (100 * hundreths + 10 * tenths));
+
+    memory[index_register] = hundreths;
+    memory[index_register + 1] = tenths;
+    memory[index_register + 2] = ones;
+
 }
 
 void opcode_write_regs(Instruction instr) {
     log_info(std::format("WRITE_MEMORY"));
 
+    for (int i = 0; i <= instr.x; i++) {
+        memory[index_register + i] = registers[i];
+    }
 }
 
 void opcode_read_regs(Instruction instr) {
     log_info(std::format("READ_MEMORY"));
 
+    for (int i = 0; i <= instr.x; i++) {
+        registers[i] = memory[index_register + i];
+    }
 }
