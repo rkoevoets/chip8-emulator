@@ -138,7 +138,7 @@ void opcode_add_y_to_x(Instruction instr) {
 void opcode_sub_y_from_x(Instruction instr) {
     log_info(std::format("SUB REG({:02X}) REG({:02X})", instr.x, instr.y));
 
-    uint8_t flag = registers[instr.y] > registers[instr.x];
+    uint8_t flag = registers[instr.y] <= registers[instr.x];
 
     registers[instr.x] = registers[instr.x] - registers[instr.y];
 
@@ -149,7 +149,7 @@ void opcode_sub_y_from_x(Instruction instr) {
 void opcode_sub_x_from_y(Instruction instr) {
     log_info(std::format("SUB REG({:02X}) REG({:02X})", instr.y, instr.x));
 
-    uint8_t flag = registers[instr.x] > registers[instr.y];
+    uint8_t flag = registers[instr.x] <= registers[instr.y];
 
     registers[instr.x] = registers[instr.y] - registers[instr.x];
 
@@ -172,7 +172,7 @@ void opcode_shift_left(Instruction instr) {
     log_info(std::format("LSHIFT REG({:02X})", instr.y));
 
     // Check the most significant bit, is it on? Then set the flag register.
-    bool bit_out = (registers[instr.y] & 0b10000000) == 0b1000000;
+    bool bit_out = (registers[instr.y] & 0b10000000) == 0b10000000;
 
     registers[instr.x] = registers[instr.y] << 1;
 
@@ -261,6 +261,12 @@ void opcode_set_sound_to_x(Instruction instr) {
 
 void opcode_add_x_to_index(Instruction instr) {
     log_info(std::format("ADD INDEX REG({:02X})", instr.x));
+
+    int temp = index_register + registers[instr.x];
+
+    if (temp > 0xFFF) {
+        registers[0xF] = 0b1;
+    }
 
     index_register += registers[instr.x];
 }
