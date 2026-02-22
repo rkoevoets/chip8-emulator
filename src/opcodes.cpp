@@ -152,7 +152,7 @@ void opcode_shift_right(Instruction instr) {
 
     bool bit_out = (registers[instr.y] & 0b1) == 0b1;
 
-    registers[instr.x] = registers[instr.y] > 1;
+    registers[instr.x] = registers[instr.y] >> 1;
 
     // Set flag register
     registers[0xF] = bit_out;
@@ -163,7 +163,7 @@ void opcode_shift_left(Instruction instr) {
 
     bool bit_out = (registers[instr.y] & 0b10000000) == 0b1000000;
 
-    registers[instr.x] = registers[instr.y] < 1;
+    registers[instr.x] = registers[instr.y] << 1;
 
     // Set flag register
     registers[0xF] = bit_out;
