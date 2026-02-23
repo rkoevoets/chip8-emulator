@@ -7,6 +7,8 @@
 #include "memory.h"
 #include "logger.h"
 
+// Inputs
+bool keyboard_inputs[256] = {false};
 
 // Graphics
 bool pixel_buffer[32][64] = { false };

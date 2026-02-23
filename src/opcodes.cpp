@@ -230,10 +230,17 @@ void opcode_draw(Instruction instr) {
 void opcode_skip_kp(Instruction instr) {
     log_info(std::format("SKIP_IF_KP"));
 
+    if (keyboard_inputs[registers[instr.x]]) {
+        program_counter += 2;
+    }
 }
 
 void opcode_skip_not_kp(Instruction instr) {
     log_info(std::format("SKIP_IF_NOT_KP"));
+
+    if (!keyboard_inputs[registers[instr.x]]) {
+        program_counter += 2;
+    }
 }
 
 // 0xF...
@@ -245,6 +252,25 @@ void opcode_set_x_to_delay(Instruction instr) {
 
 void opcode_wait_keypress(Instruction instr) {
     log_info(std::format("WAIT_KP"));
+
+    // Check for each key if they are pressed.
+    bool key_pressed = false;
+    int key_val;
+    for (int i = 0; i < 256; i++) {
+        if (keyboard_inputs[i]) {
+            key_pressed = true;
+            key_val = i;
+            break;
+        }
+    }
+
+    // If a key is pressed, store its value (lower value has higher priority and
+    // continue execution)
+    if (key_pressed) {
+        registers[instr.x] = key_val;
+    } else {
+        program_counter -= 2;
+    }
 }
 
 void opcode_set_delay_to_x(Instruction instr) {
