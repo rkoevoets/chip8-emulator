@@ -351,11 +351,11 @@ void execute(Instruction instr) {
  * @brief The main CPU loop, handles fetching, decoding and execution.
  *
  */
-void cpu_loop() {
+void update_emulator_state() {
     // Fetch
     uint16_t opcode = fetch();
 
-    log_info(std::format("PC={:04X}; OPCODE={:04X}", program_counter-2, opcode));
+    log_info(std::format("PC={:04X}; OPCODE={:04X}", program_counter - 2, opcode));
 
     // Decode
     Instruction instr = decode(opcode);

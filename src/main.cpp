@@ -16,6 +16,9 @@
 
 const int ROM_MAX_SIZE = 4096;
 
+const float CPU_FREQ = 2000.f;
+const float TIMER_FREQ = 60.f;
+
 
 // SDL objects
 SDL_Window* window;
@@ -188,11 +191,19 @@ int main(int argc, char *argv[]) {
     read_rom(rom_path, 0x200);
     load_fonts();
 
+    // Create an SDL timer to keep track of time
+    uint64_t frame_start_time, frame_end_time, frame_time_passed;
+    frame_time_passed = 0;
+
+    // Keep track of the amount of frames passed for the timers
+    uint32_t timer_frames_passed = 0;
+
     bool quit = false;
     SDL_Event e;
     while (!quit) {
         // Update the emulator state.
-        cpu_loop();
+        frame_start_time = SDL_GetTicks64();
+        update_emulator_state();
 
         // Handle all of the rendering.
         render();
@@ -203,12 +214,28 @@ int main(int argc, char *argv[]) {
                 quit = true;
             } else if (e.type == SDL_KEYDOWN) {
                 keyboard_inputs[KEY_MAPPER[e.key.keysym.scancode]] = true;
-
-                log_info(std::format("Key pressed with scancode {}", (int) e.key.keysym.scancode));
             } else if (e.type == SDL_KEYUP) {
                 keyboard_inputs[KEY_MAPPER[e.key.keysym.scancode]] = false;
             }
         }
+
+        // Update timers if enough frames have passed
+        if (timer_frames_passed >= (CPU_FREQ / TIMER_FREQ)) {
+            timer_frames_passed -= (CPU_FREQ / TIMER_FREQ);
+
+            if (delay_timer > 0) delay_timer--;
+            if (sound_timer > 0) sound_timer--;
+        }
+
+        // Determine how much time has passed in this frame
+        frame_end_time = SDL_GetTicks64();
+        frame_time_passed = frame_end_time - frame_start_time;
+        long time_to_wait = (1000 / CPU_FREQ) - frame_time_passed;
+
+        // Wait if necessary to keep timing, don't if the time has surpassed the FPS time.
+        SDL_Delay(time_to_wait < 0 ? 0 : time_to_wait);
+
+        timer_frames_passed++;
     }
 
     close_SDL();

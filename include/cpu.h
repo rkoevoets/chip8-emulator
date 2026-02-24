@@ -91,4 +91,4 @@ void push_stack(uint16_t val);
 uint16_t pop_stack();
 
 
-void cpu_loop();
+void update_emulator_state();
