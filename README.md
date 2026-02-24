@@ -10,3 +10,8 @@ My main focuses were project structuring, documentation and keeping a clear over
 
 ## Test roms passed
 - IBM Logo ROM
+
+## Things I want to add
+- ImGui support for emulator state information and debugging
+- User-friendly config (external file)
+- Ability to toggle specific behaviour (quirks)
