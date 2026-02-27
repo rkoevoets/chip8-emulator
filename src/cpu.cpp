@@ -8,7 +8,8 @@
 #include "logger.h"
 
 // Inputs
-bool keyboard_inputs[256] = {false};
+bool keys_pressed[16] = {false};
+bool keys_released[16] = {false};
 
 // Graphics
 bool pixel_buffer[32][64] = { false };
@@ -359,6 +360,11 @@ void update_emulator_state() {
 
     // Decode
     Instruction instr = decode(opcode);
+
+    for (int i = 0; i < 16; i++) {
+        if (keys_pressed[i])
+            log_info(std::format("Key pressed {:01X}", i));
+    }
 
     // Execute
     execute(instr);

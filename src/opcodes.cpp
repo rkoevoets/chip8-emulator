@@ -8,10 +8,6 @@
 #include "memory.h"
 
 
-void opcode_execute_routine(Instruction instr) {
-
-}
-
 void opcode_clear_screen(Instruction instr) {
     log_info(std::format("CLEAR_SCRN"));
 
@@ -230,7 +226,7 @@ void opcode_draw(Instruction instr) {
 void opcode_skip_kp(Instruction instr) {
     log_info(std::format("SKIP_IF_KP"));
 
-    if (keyboard_inputs[registers[instr.x]]) {
+    if (keys_pressed[registers[instr.x]]) {
         program_counter += 2;
     }
 }
@@ -238,7 +234,7 @@ void opcode_skip_kp(Instruction instr) {
 void opcode_skip_not_kp(Instruction instr) {
     log_info(std::format("SKIP_IF_NOT_KP"));
 
-    if (!keyboard_inputs[registers[instr.x]]) {
+    if (!keys_pressed[registers[instr.x]]) {
         program_counter += 2;
     }
 }
@@ -254,22 +250,23 @@ void opcode_wait_keypress(Instruction instr) {
     log_info(std::format("WAIT_KP"));
 
     // Check for each key if they are pressed.
-    bool key_pressed = false;
-    int key_val;
-    for (int i = 0; i < 256; i++) {
-        if (keyboard_inputs[i]) {
-            key_pressed = true;
+    bool any_key_pressed = false;
+    uint8_t key_val;
+    for (uint8_t i = 0; i < 16; i++) {
+        if (keys_released[i]) {
+            any_key_pressed = true;
             key_val = i;
             break;
         }
     }
 
+
     // If a key is pressed, store its value (lower value has higher priority and
     // continue execution)
-    if (key_pressed) {
-        registers[instr.x] = key_val;
-    } else {
+    if (!any_key_pressed) {
         program_counter -= 2;
+    } else {
+        registers[instr.x] = key_val;
     }
 }
 

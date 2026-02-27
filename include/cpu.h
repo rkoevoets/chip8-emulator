@@ -68,7 +68,8 @@ struct Instruction {
 typedef struct Instruction Instruction;
 
 // Inputs
-extern bool keyboard_inputs[256];
+extern bool keys_pressed[16];
+extern bool keys_released[16];
 
 // Graphics
 extern bool pixel_buffer[32][64];

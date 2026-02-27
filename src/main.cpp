@@ -24,9 +24,6 @@ const float TIMER_FREQ = 60.f;
 SDL_Window* window;
 SDL_Renderer* renderer;
 
-// Input key mapper
-std::map<int, int> KEY_MAPPER;
-
 
 void print_memory() {
     for (int i = 0; i < 4096; i+=2) {
@@ -148,6 +145,62 @@ void load_fonts() {
     std::copy(FONT_DATA, FONT_DATA + (5 * 16), memory + 0x050);
 }
 
+uint8_t translate_sdl_to_scancode(SDL_Scancode scancode) {
+    switch (scancode)
+    {
+    case SDL_SCANCODE_0:
+        return 0x0;
+        break;
+    case SDL_SCANCODE_1:
+        return 0x1;
+        break;
+    case SDL_SCANCODE_2:
+        return 0x2;
+        break;
+    case SDL_SCANCODE_3:
+        return 0x3;
+        break;
+    case SDL_SCANCODE_4:
+        return 0x4;
+        break;
+    case SDL_SCANCODE_5:
+        return 0x5;
+        break;
+    case SDL_SCANCODE_6:
+        return 0x6;
+        break;
+    case SDL_SCANCODE_7:
+        return 0x7;
+        break;
+    case SDL_SCANCODE_8:
+        return 0x8;
+        break;
+    case SDL_SCANCODE_9:
+        return 0x9;
+        break;
+    case SDL_SCANCODE_A:
+        return 0xA;
+        break;
+    case SDL_SCANCODE_B:
+        return 0xB;
+        break;
+    case SDL_SCANCODE_C:
+        return 0xC;
+        break;
+    case SDL_SCANCODE_D:
+        return 0xD;
+        break;
+    case SDL_SCANCODE_E:
+        return 0xE;
+        break;
+    case SDL_SCANCODE_F:
+        return 0xF;
+        break;
+    default:
+        break;
+    }
+}
+
 /**
  * @brief Handle graphics setup, arguments passed and initialize the emulator.
  */
@@ -163,26 +216,6 @@ int main(int argc, char *argv[]) {
     } else {
         rom_path = argv[1];
     }
-
-    // Populate the key value mapper
-    KEY_MAPPER = {
-        {SDL_SCANCODE_0, 0x0},
-        {SDL_SCANCODE_1, 0x1},
-        {SDL_SCANCODE_2, 0x2},
-        {SDL_SCANCODE_3, 0x3},
-        {SDL_SCANCODE_4, 0x4},
-        {SDL_SCANCODE_5, 0x5},
-        {SDL_SCANCODE_6, 0x6},
-        {SDL_SCANCODE_7, 0x7},
-        {SDL_SCANCODE_8, 0x8},
-        {SDL_SCANCODE_9, 0x9},
-        {SDL_SCANCODE_A, 0xA},
-        {SDL_SCANCODE_B, 0xB},
-        {SDL_SCANCODE_C, 0xC},
-        {SDL_SCANCODE_D, 0xD},
-        {SDL_SCANCODE_E, 0xE},
-        {SDL_SCANCODE_F, 0xF}
-    };
 
     // Initialize SDL
     init_SDL();
@@ -208,14 +241,20 @@ int main(int argc, char *argv[]) {
         // Handle all of the rendering.
         render();
 
+        // Reset key releases
+        for (int i = 0; i < 16; i++) {
+            keys_released[i] = false;
+        }
+
         // Check for events.
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
             } else if (e.type == SDL_KEYDOWN) {
-                keyboard_inputs[KEY_MAPPER[e.key.keysym.scancode]] = true;
+                keys_pressed[translate_sdl_to_scancode(e.key.keysym.scancode)] = true;
             } else if (e.type == SDL_KEYUP) {
-                keyboard_inputs[KEY_MAPPER[e.key.keysym.scancode]] = false;
+                keys_pressed[translate_sdl_to_scancode(e.key.keysym.scancode)] = false;
+                keys_released[translate_sdl_to_scancode(e.key.keysym.scancode)] = true;
             }
         }
 
