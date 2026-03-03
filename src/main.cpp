@@ -148,7 +148,7 @@ void load_fonts() {
 uint8_t translate_sdl_to_scancode(SDL_Scancode scancode) {
     switch (scancode)
     {
-    case SDL_SCANCODE_0:
+    case SDL_SCANCODE_X:
         return 0x0;
         break;
     case SDL_SCANCODE_1:
@@ -160,43 +160,45 @@ uint8_t translate_sdl_to_scancode(SDL_Scancode scancode) {
     case SDL_SCANCODE_3:
         return 0x3;
         break;
-    case SDL_SCANCODE_4:
+    case SDL_SCANCODE_Q:
         return 0x4;
         break;
-    case SDL_SCANCODE_5:
+    case SDL_SCANCODE_W:
         return 0x5;
         break;
-    case SDL_SCANCODE_6:
+    case SDL_SCANCODE_E:
         return 0x6;
         break;
-    case SDL_SCANCODE_7:
+    case SDL_SCANCODE_A:
         return 0x7;
         break;
-    case SDL_SCANCODE_8:
+    case SDL_SCANCODE_S:
         return 0x8;
         break;
-    case SDL_SCANCODE_9:
+    case SDL_SCANCODE_D:
         return 0x9;
         break;
-    case SDL_SCANCODE_A:
+    case SDL_SCANCODE_Z:
         return 0xA;
         break;
-    case SDL_SCANCODE_B:
+    case SDL_SCANCODE_C:
         return 0xB;
         break;
-    case SDL_SCANCODE_C:
+    case SDL_SCANCODE_4:
         return 0xC;
         break;
-    case SDL_SCANCODE_D:
+    case SDL_SCANCODE_R:
         return 0xD;
         break;
-    case SDL_SCANCODE_E:
+    case SDL_SCANCODE_F:
         return 0xE;
         break;
-    case SDL_SCANCODE_F:
+    case SDL_SCANCODE_V:
         return 0xF;
         break;
     default:
+        log_err("Did not recognize SDL_SCANCODE input, returning zero.");
+        return 0x0;
         break;
     }
 }
