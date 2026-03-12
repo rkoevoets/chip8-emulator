@@ -6,6 +6,7 @@
 
 std::ofstream log_file;
 
+bool logging_enabled = true;
 
 void open_log_file() {
     log_file.open("log.txt");
@@ -21,6 +22,9 @@ void close_log_file() {
  * @param msg The message to log.
  */
 void log_info(std::string msg) {
+    if (!logging_enabled)
+        return;
+
     std::string complete_msg = std::format("LOG: {}", msg);
     std::cout << complete_msg << std::endl;
 
@@ -33,5 +37,8 @@ void log_info(std::string msg) {
  * @param msg The message to log.
  */
 void log_err(std::string msg) {
+    if (!logging_enabled)
+        return;
+
     std::cout << "ERROR: " << msg << std::endl;
 }
