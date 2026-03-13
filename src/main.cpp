@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <SDL.h>
+#include "imgui.h"
 
 #include "cpu.h"
 #include "memory.h"
@@ -16,13 +17,64 @@
 
 const int ROM_MAX_SIZE = 4096;
 
-const float CPU_FREQ = 2000.f;
+// Timing
 const float TIMER_FREQ = 60.f;
+const int INSTR_PER_FRAME = 30;
 
+// Sound
+bool beep_playing = false;
 
 // SDL objects
 SDL_Window* window;
 SDL_Renderer* renderer;
+
+/**
+ * @brief Generate a beep noise.
+ */
+void generate_beep(void* userdata, Uint8* stream, int len_bytes) {
+    static double phase = 0.f;
+
+    // Audio wave characteristics
+    const double SOUND_AMP = 500;
+    const double SOUND_TONE = 440; // Hz
+
+    Sint16* buffer = (Sint16*) stream;
+
+    int sample_count = len_bytes / sizeof(Sint16);
+
+    if (beep_playing) {
+        for(int i = 0; i < sample_count; i++) {
+            buffer[i] = SOUND_AMP * SDL_sin(phase * 2.0f * M_PI);
+            phase += SOUND_TONE / 44100;
+
+            if (phase >= 1.0f) {
+                phase -= 1.0f;
+            }
+        }
+    } else {
+        for(int i = 0; i < sample_count; i++) {
+            buffer[i] = 0;
+        }
+    }
+}
+
+/**
+ * @brief This function opens the audio devices and attaches a callback.
+ */
+void setup_audio() {
+    // Define the audio specifications
+    SDL_AudioSpec spec = {0};
+    spec.freq = 44100;
+    spec.format = AUDIO_S16SYS;
+    spec.channels = 1;
+    spec.samples = 4096;
+    spec.callback = generate_beep;
+
+    // Retrieve the audio device ID
+    SDL_AudioDeviceID device_id = SDL_OpenAudioDevice(NULL, 0, &spec, NULL, 0);
+
+    SDL_PauseAudioDevice(device_id, 0); // Starts audio
+}
 
 
 void print_memory() {
@@ -91,7 +143,7 @@ void read_rom(std::string filepath, uint16_t offset) {
  *
  */
 void write_CHIP8_buffer() {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(renderer, 48, 98, 48, 255);
 
     for (int i = 0; i < 32; i++) {
         for (int j = 0; j < 64; j++) {
@@ -107,7 +159,7 @@ void write_CHIP8_buffer() {
  *
  */
 void render() {
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_SetRenderDrawColor(renderer, 155, 188, 15, 255);
     SDL_RenderClear(renderer);
 
     // Draw the CHIP8 pixel buffer
@@ -203,6 +255,26 @@ uint8_t translate_sdl_to_scancode(SDL_Scancode scancode) {
     }
 }
 
+void sync_with_clock(double frame_duration) {
+    static float time_to_delay_ms = 0.f;
+
+    time_to_delay_ms += (1000.f / TIMER_FREQ) - frame_duration;
+
+    // It is not possible to have a negative desired delay, so clamp it to 0.
+    if (time_to_delay_ms < 0) {
+        time_to_delay_ms = 0;
+    }
+
+    // Wait if necessary to keep timing, don't if the time has surpassed the FPS time.
+    if (time_to_delay_ms >= 1.f) {
+        int temp = (int) time_to_delay_ms;  // Casting done to round towards zero, which we need in this case
+
+        SDL_Delay(temp);
+
+        time_to_delay_ms -= temp;
+    }
+}
+
 /**
  * @brief Handle graphics setup, arguments passed and initialize the emulator.
  */
@@ -233,12 +305,18 @@ int main(int argc, char *argv[]) {
     // Keep track of the amount of frames passed for the timers
     uint32_t timer_frames_passed = 0;
 
+    // Start the audio streaming
+    setup_audio();
+
     bool quit = false;
     SDL_Event e;
     while (!quit) {
         // Update the emulator state.
         frame_start_time = SDL_GetTicks64();
-        update_emulator_state();
+
+        for (int i = 0; i < INSTR_PER_FRAME; i++) {
+            update_emulator_state();
+        }
 
         // Handle all of the rendering.
         render();
@@ -260,21 +338,19 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        // Update timers if enough frames have passed
-        if (timer_frames_passed >= (CPU_FREQ / TIMER_FREQ)) {
-            timer_frames_passed -= (CPU_FREQ / TIMER_FREQ);
+        // Assumes this main loop runs at 60Hz
+        beep_playing = sound_timer > 0;
 
-            if (delay_timer > 0) delay_timer--;
-            if (sound_timer > 0) sound_timer--;
-        }
+        if (delay_timer > 0) delay_timer--;
+        if (sound_timer > 0) sound_timer--;
 
         // Determine how much time has passed in this frame
         frame_end_time = SDL_GetTicks64();
         frame_time_passed = frame_end_time - frame_start_time;
-        long time_to_wait = (1000 / CPU_FREQ) - frame_time_passed;
 
-        // Wait if necessary to keep timing, don't if the time has surpassed the FPS time.
-        SDL_Delay(time_to_wait < 0 ? 0 : time_to_wait);
+        // Sync the loop, so it stays in sync with clock as closely as
+        // possible.
+        sync_with_clock(frame_time_passed);
 
         timer_frames_passed++;
     }

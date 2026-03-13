@@ -6,7 +6,8 @@
 
 std::ofstream log_file;
 
-bool logging_enabled = true;
+bool logging_enabled = false;
+
 
 void open_log_file() {
     log_file.open("log.txt");
