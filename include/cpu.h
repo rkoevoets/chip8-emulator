@@ -87,9 +87,10 @@ extern uint8_t sound_timer;
 // Stack
 extern uint16_t stack[16];
 
+void load_fonts();
+
 // CPU methods
 void push_stack(uint16_t val);
 uint16_t pop_stack();
 
-
-void update_emulator_state();
+void run_cpu_cycle();

@@ -31,6 +31,34 @@ uint8_t stack_pointer = 0x0;
 uint16_t stack[16] = {0x0};
 
 /**
+ * @brief Load font data into the CHIP8 memory.
+ *
+ */
+void load_fonts() {
+    const uint8_t FONT_DATA[] = {
+                0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+                0x20, 0x60, 0x20, 0x20, 0x70, // 1
+                0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+                0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+                0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+                0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+                0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+                0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+                0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+                0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+                0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+                0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+                0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+                0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+                0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+                0xF0, 0x80, 0xF0, 0x80, 0x80  // F}
+    };
+
+    std::copy(FONT_DATA, FONT_DATA + (5 * 16), memory + 0x050);
+}
+
+
+/**
  * @brief Push a 16bit value onto the stack, increment the stack pointer.
  *
  * @param val The value to push onto the stack.
@@ -352,7 +380,7 @@ void execute(Instruction instr) {
  * @brief The main CPU loop, handles fetching, decoding and execution.
  *
  */
-void update_emulator_state() {
+void run_cpu_cycle() {
     // Fetch
     uint16_t opcode = fetch();
 
@@ -361,6 +389,7 @@ void update_emulator_state() {
     // Decode
     Instruction instr = decode(opcode);
 
+    // DEBUG
     for (int i = 0; i < 16; i++) {
         if (keys_pressed[i])
             log_info(std::format("Key pressed {:01X}", i));

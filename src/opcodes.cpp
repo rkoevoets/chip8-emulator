@@ -8,6 +8,8 @@
 #include "memory.h"
 
 
+void opcode_execute_routine(Instruction instr) {};
+
 void opcode_clear_screen(Instruction instr) {
     log_info(std::format("CLEAR_SCRN"));
 
