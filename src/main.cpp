@@ -45,6 +45,7 @@ void read_rom(std::string filepath, uint16_t offset) {
  * @brief Handle graphics setup, arguments passed and initialize the emulator.
  */
 int main(int argc, char *argv[]) {
+    GUI gui;
     std::string rom_path;
 
     open_log_file();
@@ -62,7 +63,7 @@ int main(int argc, char *argv[]) {
     read_rom(rom_path, 0x200);
 
     // Start the graphical interface and the emulator with it
-    start_gui();
+    gui.start_gui();
 
     close_log_file();
 

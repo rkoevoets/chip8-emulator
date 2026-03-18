@@ -9,6 +9,7 @@
 #include "gui.h"
 #include "cpu.h"
 #include "logger.h"
+#include "memory.h"
 
 
 // Configurable options
@@ -24,16 +25,11 @@ const int EMU_WIDTH = 128;
 const float TIMER_FREQ = 60.f;
 const int INSTR_PER_FRAME = 30;
 
-// SDL objects
-SDL_Texture* chip8_texture;
-SDL_Window* window;
-SDL_Renderer* renderer;
 
 // Sound
 bool beep_playing = false;
 
 // General info to keep track off TODO: probably better to encapsulate in a class later
-
 
 
 /**
@@ -69,7 +65,7 @@ void generate_beep(void* userdata, Uint8* stream, int len_bytes) {
 /**
  * @brief This function opens the audio devices and attaches a callback.
  */
-void setup_audio() {
+void GUI::setup_audio() {
     // Define the audio specifications
     SDL_AudioSpec spec = {0};
     spec.freq = 44100;
@@ -88,13 +84,13 @@ void setup_audio() {
  * @brief Initialize SDL objects.
  *
  */
-void setup_GUI() {
+void GUI::setup_GUI() {
     SDL_Init(SDL_INIT_EVERYTHING);
 
-    window = SDL_CreateWindow("CHIP8 Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
-    renderer = SDL_CreateRenderer(window, -1, 0);
+    m_window = SDL_CreateWindow("CHIP8 Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+    m_renderer = SDL_CreateRenderer(m_window, -1, 0);
 
-    if (renderer == NULL) {
+    if (m_renderer == NULL) {
         std::cerr << "Could not initialize renderer.\n" << std::endl;
 
         const char* error_msg = SDL_GetError();
@@ -103,16 +99,16 @@ void setup_GUI() {
     }
 
     // Set default color to black
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
 
     // Create the ImGui objects
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
-    ImGui_ImplSDLRenderer2_Init(renderer);
+    ImGui_ImplSDL2_InitForSDLRenderer(m_window, m_renderer);
+    ImGui_ImplSDLRenderer2_Init(m_renderer);
 
     // Create a texture for the emulator screen
-    chip8_texture = SDL_CreateTexture(renderer,
+    m_chip8_texture = SDL_CreateTexture(m_renderer,
         SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, 64, 32);
 }
 
@@ -121,18 +117,18 @@ void setup_GUI() {
  * @brief Deallocate and close all SDL objects. Then quit SDL.
  *
  */
-void close_GUI() {
+void GUI::close_GUI() {
     ImGui_ImplSDLRenderer2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
 
     // Deallocate the SDL objects
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+    SDL_DestroyRenderer(m_renderer);
+    SDL_DestroyWindow(m_window);
 
     // Set the pointers to ensure they can't be used.
-    window = NULL;
-    renderer = NULL;
+    m_window = NULL;
+    m_renderer = NULL;
 
     SDL_Quit();
 }
@@ -141,7 +137,7 @@ void close_GUI() {
  * @brief Write all pixel values of the CHIP8 graphics to the screen.
  *
  */
-void write_CHIP8_buffer() {
+void GUI::write_CHIP8_buffer() {
     uint32_t colors[64 * 32];
 
     for (int i = 0; i < 32; i++) {
@@ -154,22 +150,80 @@ void write_CHIP8_buffer() {
         }
     }
 
-    SDL_UpdateTexture(chip8_texture, nullptr, colors, 64 * sizeof(uint32_t));
+    SDL_UpdateTexture(m_chip8_texture, nullptr, colors, 64 * sizeof(uint32_t));
 
+    bool center_screen = false;
+
+    if (center_screen) {
+    // This code centers the CHIP8 screen to the parent window.
     SDL_Rect dest_rect{
         (WINDOW_WIDTH / 2) - ((EMU_WIDTH * EMU_SCALE) / 2),
         (WINDOW_HEIGHT / 2) - ((EMU_HEIGHT * EMU_SCALE) / 2),
         EMU_WIDTH * EMU_SCALE, EMU_HEIGHT * EMU_SCALE};
 
-    SDL_RenderCopy(renderer, chip8_texture, NULL, &dest_rect);
+        SDL_RenderCopy(m_renderer, m_chip8_texture, NULL, &dest_rect);
+    } else {
+        SDL_Rect dest_rect{
+        0,
+        0,
+        EMU_WIDTH * EMU_SCALE, EMU_HEIGHT * EMU_SCALE};
+
+        SDL_RenderCopy(m_renderer, m_chip8_texture, NULL, &dest_rect);
+    }
 }
 
-void render_info_window() {
-    ImGui::Begin("Info");
+void GUI::render_gui_controls() {
+    ImGui::Begin("Controls");
+
+    if(ImGui::Button(run_fast ? "Stop" : "Run")) {
+        run_fast ^= true;
+    }
+
+    ImGui::SameLine();
+
+    if(ImGui::Button("Step")) {
+        execute_next = true;
+    }
+
+    ImGui::End();
+}
+
+void GUI::render_gui_cpu() {
+    ImGui::Begin("CPU");
 
     ImGui::Checkbox("Sound?", &beep_playing);
     ImGui::Text(std::format("Delay timer {:02X}", delay_timer).c_str());
     ImGui::Text(std::format("Sound timer {:02X}", sound_timer).c_str());
+
+    ImGui::Text(std::format("Program Counter {:02X}", program_counter).c_str());
+
+    for (int i = 0; i < 16; i++) {
+        ImGui::InputScalar(std::format("Register {:01X}", i).c_str(), ImGuiDataType_U8, (registers + i));
+    }
+
+    ImGui::End();
+}
+
+void GUI::render_gui_memory() {
+    ImGui::Begin("Memory");
+
+    // Display a grid of memory locations (16 wide?)
+
+    ImGuiTableFlags flags = ImGuiTableFlags_RowBg;
+    if (ImGui::BeginTable("memory", 17, flags)) {
+        for (int row = 0; row < 256; row++) {
+            ImGui::TableNextRow();
+
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text(std::format("{:02X}xx", row).c_str());
+            for (int col = 0; col < 16; col++) {
+                ImGui::TableSetColumnIndex(col + 1);
+                ImGui::Text(std::format("{:02X}", memory[row * 16 + col]).c_str());
+            }
+        }
+    }
+
+    ImGui::EndTable();
 
     ImGui::End();
 }
@@ -178,28 +232,30 @@ void render_info_window() {
  * @brief Main render loop of the emulator. Handles the rendering of the CHIP8
  * pixels to the screen.
  */
-void render() {
+void GUI::render() {
     ImGui_ImplSDLRenderer2_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
     // add imgui windows here
-    render_info_window();
+    render_gui_cpu();
+    render_gui_controls();
+    render_gui_memory();
 
     // After creating all ImGui windows, this will finalize the ImGui render data
     ImGui::Render();
 
-    SDL_RenderSetLogicalSize(renderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+    SDL_RenderSetLogicalSize(m_renderer, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-    SDL_RenderClear(renderer);
+    SDL_RenderClear(m_renderer);
 
     write_CHIP8_buffer();
-    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
+    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), m_renderer);
 
-    SDL_RenderPresent(renderer);
+    SDL_RenderPresent(m_renderer);
 }
 
-uint8_t translate_sdl_to_scancode(SDL_Scancode scancode) {
+uint8_t GUI::translate_sdl_to_scancode(SDL_Scancode scancode) {
     switch (scancode)
     {
     case SDL_SCANCODE_X:
@@ -257,7 +313,7 @@ uint8_t translate_sdl_to_scancode(SDL_Scancode scancode) {
     }
 }
 
-void sync_with_clock(double frame_duration) {
+void GUI::sync_with_clock(double frame_duration) {
     static float time_to_delay_ms = 0.f;
 
     time_to_delay_ms += (1000.f / TIMER_FREQ) - frame_duration;
@@ -277,14 +333,14 @@ void sync_with_clock(double frame_duration) {
     }
 }
 
-void handle_key_events(bool* quit) {
+void GUI::handle_key_events() {
     // Check for events.
     SDL_Event e;
     while (SDL_PollEvent(&e) != 0) {
         ImGui_ImplSDL2_ProcessEvent(&e);
 
         if (e.type == SDL_QUIT) {
-            *quit = true;
+            running = false;
         } else if (e.type == SDL_KEYDOWN) {
             keys_pressed[translate_sdl_to_scancode(e.key.keysym.scancode)] = true;
         } else if (e.type == SDL_KEYUP) {
@@ -295,7 +351,7 @@ void handle_key_events(bool* quit) {
 }
 
 
-void run_emulator() {
+void GUI::run_emulator() {
     // Create an SDL timer to keep track of time
     uint64_t frame_start_time, frame_end_time, frame_time_passed;
     frame_time_passed = 0;
@@ -303,13 +359,18 @@ void run_emulator() {
     // Keep track of the amount of frames passed for the timers
     uint32_t timer_frames_passed = 0;
 
-    bool quit = false;
-    while (!quit) {
+    while (running) {
         // Update the emulator state.
         frame_start_time = SDL_GetTicks64();
 
-        for (int i = 0; i < INSTR_PER_FRAME; i++) {
+        if (run_fast) {
+            for (int i = 0; i < INSTR_PER_FRAME; i++) {
+                run_cpu_cycle();
+            }
+        } else if (execute_next) {
             run_cpu_cycle();
+
+            execute_next = false;
         }
 
         // Handle all of the rendering.
@@ -321,11 +382,12 @@ void run_emulator() {
         }
 
         // Check for key press and release events
-        handle_key_events(&quit);
+        handle_key_events();
 
         // Assumes this main loop runs at 60Hz
         beep_playing = sound_timer > 0;
 
+        // TODO: Should depend on frame counts instead of fixed clock frequency
         if (delay_timer > 0) delay_timer--;
         if (sound_timer > 0) sound_timer--;
 
@@ -342,7 +404,7 @@ void run_emulator() {
 }
 
 
-void start_gui() {
+void GUI::start_gui() {
     // Initialize SDL, audio and other things.
     setup_GUI();
     setup_audio();
