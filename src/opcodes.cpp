@@ -6,6 +6,7 @@
 #include "cpu.h"
 #include "opcodes.h"
 #include "memory.h"
+#include <iostream>
 
 
 void opcode_execute_routine(Instruction instr) {};
@@ -262,7 +263,6 @@ void opcode_wait_keypress(Instruction instr) {
         }
     }
 
-
     // If a key is pressed, store its value (lower value has higher priority and
     // continue execution)
     if (!any_key_pressed) {
@@ -322,7 +322,9 @@ void opcode_write_regs(Instruction instr) {
     log_info(std::format("WRITE_MEMORY"));
 
     for (int i = 0; i <= instr.x; i++) {
-        memory[index_register + i] = registers[i];
+        memory[index_register] = registers[i];
+
+        index_register++;
     }
 }
 
@@ -330,6 +332,8 @@ void opcode_read_regs(Instruction instr) {
     log_info(std::format("READ_MEMORY"));
 
     for (int i = 0; i <= instr.x; i++) {
-        registers[i] = memory[index_register + i];
+        registers[i] = memory[index_register];
+
+        index_register++;
     }
 }

@@ -408,7 +408,7 @@ void update_clocks(double time_delta_ms) {
  * @brief The main CPU loop, handles fetching, decoding and execution.
  *
  */
-void run_cpu_cycle() {
+void cpu_execute_instruction() {
     // The fetch-decode-execute lines
     uint16_t opcode = fetch();
 

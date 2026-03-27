@@ -93,4 +93,4 @@ void load_fonts();
 void push_stack(uint16_t val);
 uint16_t pop_stack();
 
-void run_cpu_cycle();
+void cpu_execute_instruction();

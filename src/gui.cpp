@@ -25,8 +25,6 @@ const int EMU_WIDTH = 128;
 // Sound
 bool beep_playing = false;
 
-// General info to keep track off TODO: probably better to encapsulate in a class later
-
 
 /**
  * @brief Generate a beep noise.
@@ -192,9 +190,10 @@ void GUI::render_gui_cpu() {
     ImGui::Text(std::format("Sound timer {:02X}", sound_timer).c_str());
 
     ImGui::Text(std::format("Program Counter {:02X}", program_counter).c_str());
+    ImGui::Text(std::format("Index register {:02X}", index_register).c_str());
 
     for (int i = 0; i < 16; i++) {
-        ImGui::InputScalar(std::format("Register {:01X}", i).c_str(), ImGuiDataType_U8, (registers + i));
+        ImGui::InputScalar(std::format("V{:01X}", i).c_str(), ImGuiDataType_U8, (registers + i));
     }
 
     ImGui::End();
@@ -206,15 +205,35 @@ void GUI::render_gui_memory() {
     // Display a grid of memory locations (16 wide?)
 
     ImGuiTableFlags flags = ImGuiTableFlags_RowBg;
+    uint16_t address;
     if (ImGui::BeginTable("memory", 17, flags)) {
         for (int row = 0; row < 256; row++) {
             ImGui::TableNextRow();
 
             ImGui::TableSetColumnIndex(0);
-            ImGui::Text(std::format("{:02X}xx", row).c_str());
+            ImGui::Text(std::format("{:02X}x", row).c_str());
             for (int col = 0; col < 16; col++) {
+                address = row * 16 + col;
+
                 ImGui::TableSetColumnIndex(col + 1);
-                ImGui::Text(std::format("{:02X}", memory[row * 16 + col]).c_str());
+
+                // Highlight memory containing positive values
+                if (memory[address] > 0x0) {
+                    ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 1.0f, 0.2f)));
+                } else {
+                    ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 1.0f, 0.0f)));
+                }
+
+                // Highlight where the PC is pointing in memory
+                if (address == program_counter || address == (program_counter + 1)) {
+                    ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 1.0f, 0.8f)));
+                }
+
+                if (address == index_register) {
+                    ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImVec4(1.0f, 0.0f, 0.0f, 0.8f)));
+                }
+
+                ImGui::Text(std::format("{:02X}", memory[address]).c_str());
             }
         }
     }
@@ -359,10 +378,10 @@ void GUI::run_emulator() {
         // debugger is being used to step through or it's fast execution.
         if (run_fast) {
             for (int i = 0; i < INSTR_PER_FRAME; i++) {
-                run_cpu_cycle();
+                cpu_execute_instruction();
             }
         } else if (execute_next) {
-            run_cpu_cycle();
+            cpu_execute_instruction();
 
             execute_next = false;
         }
@@ -384,8 +403,6 @@ void GUI::run_emulator() {
         // Determine how much time has passed in this frame (in milliseconds)
         frame_end_time = SDL_GetTicks64();
         frame_time_delta = frame_end_time - frame_start_time;
-
-        // TODO: take look at timing again, I think it decrements too quickly now. Also, doesnt use the outer loop timing now.
 
         // Sync the loop, so it stays in sync with clock as closely as
         // possible.
