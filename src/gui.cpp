@@ -10,6 +10,7 @@
 #include "cpu.h"
 #include "logger.h"
 #include "memory.h"
+#include "config.h"
 
 
 // Configurable options
@@ -19,11 +20,6 @@ const int WINDOW_WIDTH = 1280;
 const int EMU_SCALE = 5;
 const int EMU_HEIGHT = 64;
 const int EMU_WIDTH = 128;
-
-
-// Timing
-const float TIMER_FREQ = 60.f;
-const int INSTR_PER_FRAME = 30;
 
 
 // Sound
@@ -353,16 +349,14 @@ void GUI::handle_key_events() {
 
 void GUI::run_emulator() {
     // Create an SDL timer to keep track of time
-    uint64_t frame_start_time, frame_end_time, frame_time_passed;
-    frame_time_passed = 0;
-
-    // Keep track of the amount of frames passed for the timers
-    uint32_t timer_frames_passed = 0;
+    uint64_t frame_start_time, frame_end_time, frame_time_delta;
+    frame_time_delta = 0;
 
     while (running) {
-        // Update the emulator state.
         frame_start_time = SDL_GetTicks64();
 
+        // Decide how to execute instruction, depends on whether the
+        // debugger is being used to step through or it's fast execution.
         if (run_fast) {
             for (int i = 0; i < INSTR_PER_FRAME; i++) {
                 run_cpu_cycle();
@@ -387,19 +381,15 @@ void GUI::run_emulator() {
         // Assumes this main loop runs at 60Hz
         beep_playing = sound_timer > 0;
 
-        // TODO: Should depend on frame counts instead of fixed clock frequency
-        if (delay_timer > 0) delay_timer--;
-        if (sound_timer > 0) sound_timer--;
-
-        // Determine how much time has passed in this frame
+        // Determine how much time has passed in this frame (in milliseconds)
         frame_end_time = SDL_GetTicks64();
-        frame_time_passed = frame_end_time - frame_start_time;
+        frame_time_delta = frame_end_time - frame_start_time;
+
+        // TODO: take look at timing again, I think it decrements too quickly now. Also, doesnt use the outer loop timing now.
 
         // Sync the loop, so it stays in sync with clock as closely as
         // possible.
-        sync_with_clock(frame_time_passed);
-
-        timer_frames_passed++;
+        sync_with_clock(frame_time_delta);
     }
 }
 

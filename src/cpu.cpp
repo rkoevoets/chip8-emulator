@@ -1,11 +1,17 @@
 #include <iostream>
 #include <format>
 #include <stdint.h>
+#include <cmath>
+#include <SDL.h>
 
 #include "cpu.h"
 #include "opcodes.h"
 #include "memory.h"
 #include "logger.h"
+#include "config.h"
+
+// Configurables
+const float TIMER_DEC_RATE = 60.f;  // Hz
 
 // Inputs
 bool keys_pressed[16] = {false};
@@ -25,6 +31,8 @@ uint16_t program_counter = 0x200;
 // Timers
 uint8_t delay_timer = 0x0;
 uint8_t sound_timer = 0x0;
+
+float timer_accum = 0;
 
 // Stack
 uint8_t stack_pointer = 0x0;
@@ -377,24 +385,39 @@ void execute(Instruction instr) {
 }
 
 /**
+ * @brief Updates the delay and sound timers according to passed emulator time.
+ */
+void update_clocks(double time_delta_ms) {
+    timer_accum += time_delta_ms;
+
+    double time_per_update = 1000.f / TIMER_DEC_RATE;
+    int decrement_count = std::floor(timer_accum / time_per_update);
+
+
+    // Update the sound and delay timer accordingly.
+    if (timer_accum >= time_per_update) {
+        timer_accum -= time_per_update * decrement_count;
+
+        // Prevents underflow
+        sound_timer = sound_timer < decrement_count ? 0 : sound_timer - decrement_count;
+        delay_timer = delay_timer < decrement_count ? 0 : delay_timer - decrement_count;
+    }
+}
+
+/**
  * @brief The main CPU loop, handles fetching, decoding and execution.
  *
  */
 void run_cpu_cycle() {
-    // Fetch
+    // The fetch-decode-execute lines
     uint16_t opcode = fetch();
 
     log_info(std::format("PC={:04X}; OPCODE={:04X}", program_counter - 2, opcode));
 
-    // Decode
     Instruction instr = decode(opcode);
 
-    // DEBUG
-    for (int i = 0; i < 16; i++) {
-        if (keys_pressed[i])
-            log_info(std::format("Key pressed {:01X}", i));
-    }
-
-    // Execute
     execute(instr);
+
+    // Update the sound and delay timer
+    update_clocks(1000.f / (TIMER_FREQ * INSTR_PER_FRAME));
 }

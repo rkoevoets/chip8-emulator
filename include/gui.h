@@ -1,3 +1,5 @@
+#pragma once
+
 #include <SDL.h>
 
 class GUI {
@@ -6,6 +8,7 @@ class GUI {
     SDL_Window* m_window;
     SDL_Renderer* m_renderer;
 
+    // State
     bool running = true;
     bool run_fast = false;
     bool execute_next = false;
